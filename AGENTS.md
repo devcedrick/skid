@@ -21,8 +21,8 @@
 ## Architecture (thin routes → `src/`)
 
 - `app/` screens only compose hooks + components and navigate; no business logic, no SQL in screens.
-- Business logic lives in `src/`: `types/schedule.ts` (no logic), `storage/db.ts` (open + migrations) + `storage/repositories.ts` (only place that touches SQL), `ocr/ocr.ts`, `ai/parser.ts`, `notifications/reminders.ts`, `hooks/useSchedules.ts`, `utils/time.ts` + `utils/validators.ts`.
-- `src/ocr` and `src/ai` ship as interfaces + stubs first (`extractText(uri) → ""`, `parseSchedule(ocrText) → { semester: null, sessions: [] }`); real inference is wired later behind the same signatures.
+- Business logic lives in `src/`: `types/schedule.ts` (no logic), `storage/db.ts` (open + migration SQL) + `storage/repositories.ts` (only place for application queries and CRUD), `ocr/ocr.ts`, `ai/parser.ts`, `notifications/reminders.ts`, `hooks/useSchedules.ts`, `utils/time.ts` + `utils/validators.ts`.
+- `src/ocr` and `src/ai` ship as interfaces + stubs first (`extractText(uri) → ""`, `parseSchedule(ocrText) → { semester: null, sessions: [] }`); real inference is wired later behind the same signatures. The stub empty result means nothing parsed yet — never a successful empty schedule; the no-drop error policy binds the real parser, which degrades unparseable fields to editable `null` per FR-2.3.
 - Review (`review.tsx`) persists only on explicit confirm via `saveParsedSchedule`; Manual Add shares the same validators. Add entry point lives only on Today.
 
 ## Constraints
@@ -39,7 +39,7 @@
   1. New `docs/adr/NNNN-*.md` copied from `docs/adr/0000-template.md` (Context / Decision / Consequences, plain IDs like FR-2.3, C-5).
   2. Index it in `docs/DECISIONS.md` under `## Records`.
   3. Add a `docs/CHANGELOG.md` `[Unreleased]` entry (Added / Changed / Fixed) with an `[ADR-XXXX]` ref; entry states *what*, ADR carries *why* — never duplicate reasoning.
-- Never edit an accepted ADR; a reversal is a new ADR plus flipping the old file's `status:` to `superseded by [[NNNN-...]]`.
+- Never edit an accepted ADR except to update its `status:` to `superseded by [[NNNN-...]]` when a reversal ADR is accepted.
 
 ## NativeWind
 
