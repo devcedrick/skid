@@ -6,7 +6,7 @@ export const ALL_DAYS: Day[] = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
 const DAY_SET = new Set<string>(ALL_DAYS);
 
 export function isDay(value: unknown): value is Day {
-  return typeof value === 'string' && DAY_SET.has(value.toUpperCase());
+  return typeof value === 'string' && DAY_SET.has(value);
 }
 
 /** Normalize day tokens: uppercase, drop unknowns. Empty → invalid (Review flag). */
