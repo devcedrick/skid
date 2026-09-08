@@ -21,7 +21,7 @@
 ## Architecture (thin routes → `src/`)
 
 - `app/` screens only compose hooks + components and navigate; no business logic, no SQL in screens.
-- Business logic lives in `src/`: `types/schedule.ts` (no logic), `storage/db.ts` (open + migrations) + `storage/repositories.ts` (only place that touches SQL), `ocr/ocr.ts`, `ai/parser.ts`, `notifications/reminders.ts`, `hooks/useSchedules.ts`, `utils/time.ts` + `utils/validators.ts`.
+- Business logic lives in `src/`: `types/schedule.ts` (no logic), `storage/db.ts` (open + migration SQL) + `storage/repositories.ts` (only place for application queries and CRUD), `ocr/ocr.ts`, `ai/parser.ts`, `notifications/reminders.ts`, `hooks/useSchedules.ts`, `utils/time.ts` + `utils/validators.ts`.
 - `src/ocr` and `src/ai` ship as interfaces + stubs first (`extractText(uri) → ""`, `parseSchedule(ocrText) → { semester: null, sessions: [] }`); real inference is wired later behind the same signatures.
 - Review (`review.tsx`) persists only on explicit confirm via `saveParsedSchedule`; Manual Add shares the same validators. Add entry point lives only on Today.
 
