@@ -39,7 +39,7 @@
   1. New `docs/adr/NNNN-*.md` copied from `docs/adr/0000-template.md` (Context / Decision / Consequences, plain IDs like FR-2.3, C-5).
   2. Index it in `docs/DECISIONS.md` under `## Records`.
   3. Add a `docs/CHANGELOG.md` `[Unreleased]` entry (Added / Changed / Fixed) with an `[ADR-XXXX]` ref; entry states *what*, ADR carries *why* — never duplicate reasoning.
-- Never edit an accepted ADR; a reversal is a new ADR plus flipping the old file's `status:` to `superseded by [[NNNN-...]]`.
+- Never edit an accepted ADR except to update its `status:` to `superseded by [[NNNN-...]]` when a reversal ADR is accepted.
 
 ## NativeWind
 
