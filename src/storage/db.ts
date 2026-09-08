@@ -44,6 +44,9 @@ CREATE INDEX IF NOT EXISTS idx_session_days_day_time
  * Later schema changes add a new migration block here (C-5).
  */
 export async function migrateDbIfNeeded(db: SQLite.SQLiteDatabase): Promise<void> {
+  // Per-connection setting (SQLite defaults OFF): enforce before anything else
+  // so every opened connection gets it, including already-current databases.
+  await db.execAsync('PRAGMA foreign_keys = ON;');
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   const current = row?.user_version ?? 0;
   if (current >= DATABASE_VERSION) return;
