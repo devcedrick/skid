@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import type * as SQLite from 'expo-sqlite';
 import type { Day, ParsedSchedule, ScheduleType, Session } from '@/src/types/schedule';
 import { generateId } from '@/src/storage/db';
@@ -114,7 +115,9 @@ export async function getSessionById(
  * Review confirm only (FR-3.3). Creates one semester row for the parsed
  * batch, then one sessions row + session_days rows + default reminder
  * per entry. Never drops a session: empty days persist without day rows
- * for correction. Atomic via transaction.
+ * for correction. Atomic via an exclusive transaction on native so
+ * concurrent writes (e.g. setReminder) cannot join the import; web falls
+ * back to a non-exclusive transaction (exclusive is unsupported there).
  */
 export async function saveParsedSchedule(
   db: SQLite.SQLiteDatabase,
@@ -122,14 +125,14 @@ export async function saveParsedSchedule(
   kind: ScheduleType,
 ): Promise<string> {
   const semesterId = generateId();
-  await db.withTransactionAsync(async () => {
-    await db.runAsync(
+  const runImport = async (txn: SQLite.SQLiteDatabase): Promise<void> => {
+    await txn.runAsync(
       'INSERT INTO semesters (id, name, kind, valid_from, valid_to) VALUES (?, ?, ?, NULL, NULL)',
       [semesterId, parsed.semester, kind],
     );
     for (const entry of parsed.sessions) {
       const sessionId = generateId();
-      await db.runAsync(
+      await txn.runAsync(
         `INSERT INTO sessions
           (id, semester_id, course_code, course_name, offering_number, type,
            start_time, end_time, location, instructor)
@@ -148,17 +151,22 @@ export async function saveParsedSchedule(
         ],
       );
       for (const day of entry.days) {
-        await db.runAsync('INSERT OR IGNORE INTO session_days (session_id, day) VALUES (?, ?)', [
+        await txn.runAsync('INSERT OR IGNORE INTO session_days (session_id, day) VALUES (?, ?)', [
           sessionId,
           day,
         ]);
       }
-      await db.runAsync(
+      await txn.runAsync(
         'INSERT OR IGNORE INTO reminders (session_id, enabled, lead_minutes) VALUES (?, 0, ?)',
         [sessionId, DEFAULT_LEAD_MINUTES],
       );
     }
-  });
+  };
+  if (Platform.OS === 'web') {
+    await db.withTransactionAsync(() => runImport(db));
+  } else {
+    await db.withExclusiveTransactionAsync((txn) => runImport(txn));
+  }
   return semesterId;
 }
 
